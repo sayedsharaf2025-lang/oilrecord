@@ -3,1239 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام إدارة فواتير وتغيير زيت أسطول السيارات الذكي</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    
+    <title>منظومة إدارة تغيير زيت أسطول السيارات السحابية</title>
     <style>
         :root {
-            --primary: #1a56db;
-            --primary-dark: #1e429f;
-            --primary-light: #ebf5ff;
-            --success: #0e9f6e;
-            --success-light: #def7ec;
-            --warning: #d03801;
-            --warning-light: #feecdc;
-            --danger: #e02424;
-            --danger-light: #fde8e8;
-            --orange: #ff5a1f;
-            --orange-light: #fff3f1;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-500: #6b7280;
-            --gray-700: #374151;
-            --gray-900: #111827;
-            --radius: 16px;
-            --radius-sm: 8px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --primary: #1e3a8a;
+            --primary-dark: #1e40af;
+            --primary-light: #eff6ff;
+            --accent: #f59e0b;
+            --accent-light: #fef3c7;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --gray-bg: #f3f4f6;
+            --gray-border: #e5e7eb;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8fafc; color: var(--text-dark); padding-bottom: 60px; min-height: 100vh; }
 
-        body {
-            background-color: #f8fafc;
-            color: var(--gray-900);
-            min-height: 100vh;
-            padding-bottom: 75px; /* مسافة للـ Tab Bar السفلية */
-        }
+        /* Header */
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 20px 16px; text-align: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .status-badge { inline-size: max-content; margin: 0 auto; font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; }
 
-        /* ─── Header ─── */
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 16px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* Main Container */
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
 
-        header h1 {
-            font-size: 18px;
-            font-weight: 700;
-        }
+        /* Navigation Tabs */
+        .tabs { display: flex; background: white; border-radius: var(--radius); padding: 4px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--gray-border); }
+        .tab-btn { flex: 1; border: none; background: none; padding: 10px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
 
-        .status-badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        /* Cards */
+        .card { background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--gray-border); }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--gray-bg); padding-bottom: 8px; }
 
-        .status-badge.online::before {
-            content: '';
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: #31c745;
-            border-radius: 50%;
-        }
+        /* Forms */
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text-dark); }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-border); border-radius: 8px; font-size: 14px; background-color: white; outline: none; transition: border 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); }
 
-        .status-badge.offline::before {
-            content: '';
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--danger);
-            border-radius: 50%;
-        }
-
-        /* ─── Main Content ─── */
-        main {
-            padding: 16px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ─── Cards ─── */
-        .card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(241, 245, 249, 0.8);
-        }
-
-        .card-header-title {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: var(--gray-700);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 2px solid var(--gray-100);
-            padding-bottom: 8px;
-        }
-
-        /* ─── Dashboard Stats ─── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat-box {
-            padding: 16px;
-            border-radius: var(--radius);
-            background: white;
-            box-shadow: var(--shadow);
-            text-align: center;
-            border-right: 5px solid var(--gray-500);
-        }
-
-        .stat-box.total { border-right-color: var(--primary); }
-        .stat-box.danger { border-right-color: var(--danger); background-color: var(--danger-light); }
-        .stat-box.warning { border-right-color: var(--orange); background-color: var(--orange-light); }
-        .stat-box.success { border-right-color: var(--success); background-color: var(--success-light); }
-
-        .stat-count {
-            font-size: 24px;
-            font-weight: 800;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .stat-box.danger .stat-count { color: var(--danger); }
-        .stat-box.warning .stat-count { color: var(--orange); }
-        .stat-box.success .stat-count { color: var(--success); }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--gray-500);
-            font-weight: 600;
-        }
-
-        /* ─── UI Forms ─── */
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 6px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid var(--gray-200);
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            color: var(--gray-900);
-            background-color: white;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        button:active { transform: scale(0.98); }
-
-        .btn-block { width: 100%; }
+        /* Buttons */
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
-        .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger { background: var(--danger); color: white; padding: 6px 12px; font-size: 12px; width: auto; margin-top: 8px; }
 
-        /* ─── Vehicle & Progress items ─── */
-        .vehicle-item {
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            background: white;
-        }
-
-        .vehicle-info-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .vehicle-title {
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .vehicle-meta {
-            font-size: 12px;
-            color: var(--gray-500);
-            margin-top: 2px;
-        }
-
-        .badge {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 6px;
-        }
-
-        .badge.danger { background: var(--danger-light); color: var(--danger); }
-        .badge.warning { background: var(--orange-light); color: var(--orange); }
-        .badge.alert { background: var(--warning-light); color: var(--warning); }
-        .badge.success { background: var(--success-light); color: var(--success); }
-
-        .progress-container {
-            margin: 12px 0 8px;
-        }
-
-        .progress-bar-bg {
-            background-color: var(--gray-100);
-            height: 10px;
-            border-radius: 20px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 20px;
-            transition: width 0.4s ease;
-        }
-
-        .progress-bar-fill.danger { background-color: var(--danger); }
-        .progress-bar-fill.warning { background-color: var(--orange); }
-        .progress-bar-fill.alert { background-color: var(--warning); }
-        .progress-bar-fill.success { background-color: var(--success); }
-
-        .progress-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--gray-500);
-            margin-top: 4px;
-        }
-
-        /* ─── Drag & Drop ─── */
-        .drop-zone {
-            border: 2.5px dashed var(--gray-200);
-            border-radius: var(--radius);
-            padding: 30px 20px;
-            text-align: center;
-            background-color: #fafbfc;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .drop-zone.dragover {
-            border-color: var(--primary);
-            background-color: var(--primary-light);
-        }
-
-        .drop-zone-icon {
-            font-size: 40px;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        /* ─── Filter Chips ─── */
-        .filter-chips {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            margin-bottom: 14px;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-        .filter-chips::-webkit-scrollbar { display: none; }
-
-        .chip {
-            padding: 6px 14px;
-            border-radius: 20px;
-            background-color: white;
-            border: 1px solid var(--gray-200);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--gray-500);
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .chip.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        /* ─── Data Tables ─── */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-sm);
-            background: white;
-            margin-top: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            text-align: right;
-        }
-
-        th {
-            background-color: var(--gray-100);
-            color: var(--gray-700);
-            padding: 10px 12px;
-            font-weight: 700;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--gray-200);
-            color: var(--gray-700);
-            vertical-align: middle;
-        }
-
-        tr:last-child td { border-bottom: none; }
-
-        .actions-cell {
-            display: flex;
-            gap: 4px;
-        }
-
-        .btn-table-action {
-            padding: 4px 8px;
-            font-size: 11px;
-            border-radius: 4px;
-        }
-
-        /* ─── Config/Setup Overlay ─── */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background-color: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-        .modal-box {
-            background: white;
-            border-radius: var(--radius);
-            padding: 24px;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ─── Bottom Tab Bar ─── */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
-            background-color: white;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 90;
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray-500);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 700;
-            height: 100%;
-            gap: 3px;
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-        }
-
-        .nav-icon {
-            font-size: 20px;
-        }
-
-        /* ─── Utilities ─── */
-        .hidden { display: none !important; }
+        /* Vehicle List Cards */
+        .car-card { background: white; border-radius: var(--radius); padding: 14px; margin-bottom: 10px; border-right: 5px solid var(--primary); box-shadow: var(--shadow); position: relative; }
+        .car-card.alert-active { border-right-color: var(--danger); background: #fef2f2; }
+        .car-card.alert-warning { border-right-color: var(--accent); background: #fffbeb; }
+        .car-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .car-title-text { font-size: 15px; font-weight: 700; }
+        .car-plate { font-size: 12px; background: var(--gray-bg); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
         
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .car-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; font-size: 12px; }
+        .grid-item { background: var(--gray-bg); padding: 6px 8px; border-radius: 6px; }
+        .car-card.alert-active .grid-item { background: #fee2e2; }
+        .car-card.alert-warning .grid-item { background: #fef3c7; }
+        .item-lbl { color: var(--text-muted); font-size: 10px; margin-bottom: 2px; }
+        .item-val { font-weight: 700; }
 
-        /* Toast notifications */
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--gray-900);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            z-index: 2000;
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
-        }
-        @keyframes toastIn { from { bottom: 50px; opacity: 0; } to { bottom: 80px; opacity: 1; } }
-        @keyframes toastOut { from { bottom: 80px; opacity: 1; } to { bottom: 50px; opacity: 0; } }
+        .alert-banner { margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center; }
+        .banner-danger { background: var(--danger); color: white; }
+        .banner-warning { background: var(--accent); color: white; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+        .stat-box { background: white; padding: 12px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); border: 1px solid var(--gray-border); }
+        .stat-num { font-size: 18px; font-weight: 700; color: var(--primary); }
+        .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        .hidden { display: none !important; }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-<div id="configOverlay" class="overlay hidden">
-    <div class="modal-box">
-        <h2 style="margin-bottom: 8px; font-weight:800; font-size:18px;">🔥 إعداد قاعدة بيانات Firebase</h2>
-        <p style="font-size:13px; color: var(--gray-500); margin-bottom:16px;">يرجى إدخال بيانات تهيئة مشروعك في Firebase (Realtime Database) للبدء في مزامنة البيانات في الوقت الفعلي.</p>
-        
-        <div class="form-group"><label>API Key</label><input type="text" id="fb_apiKey"></div>
-        <div class="form-group"><label>Auth Domain</label><input type="text" id="fb_authDomain"></div>
-        <div class="form-group"><label>Project ID</label><input type="text" id="fb_projectId"></div>
-        <div class="form-group"><label>Database URL</label><input type="text" id="fb_databaseURL" placeholder="https://your-db-name.firebaseio.com/"></div>
-        
-        <button class="btn-primary btn-block" onclick="saveFirebaseConfig()" style="margin-top:20px;">حفظ وتوصيل النظام السحابي</button>
+<div class="header">
+    <h1>🚗 إدارة زيت أسطول السيارات</h1>
+    <div class="status-badge" id="cloudStatus">🔄 جاري المزامنة مع السحاب...</div>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('fleet')">📋 الأسطول</button>
+        <button class="tab-btn" onclick="switchTab('add')">➕ إضافة سيارة</button>
+        <button class="tab-btn" onclick="switchTab('logs')">📝 تحديث العداد</button>
+    </div>
+
+    <div id="tab-fleet">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-num" id="totalCars">0</div>
+                <div class="stat-lbl">إجمالي السيارات</div>
+            </div>
+            <div class="stat-box" style="border-right: 4px solid var(--danger);">
+                <div class="stat-num" id="alertCars" style="color: var(--danger);">0</div>
+                <div class="stat-lbl">سيارات تحتاج تغيير زيت</div>
+            </div>
+        </div>
+        <div id="fleetList"></div>
+    </div>
+
+    <div id="tab-add" class="hidden">
+        <div class="card">
+            <div class="card-title">➕ تسجيل سيارة جديدة في المنظومة</div>
+            <div class="form-group">
+                <label>اسم السيارة / السائق</label>
+                <input type="text" id="carName" placeholder="مثال: جامبو - أحمد علي">
+            </div>
+            <div class="form-group">
+                <label>رقم اللوحة</label>
+                <input type="text" id="carPlate" placeholder="مثال: ج ب أ 1234">
+            </div>
+            <div class="form-group">
+                <label>قراءة العداد الحالية (كم)</label>
+                <input type="number" id="currentKm" placeholder="مثال: 150000">
+            </div>
+            <div class="form-group">
+                <label>نوع الزيت الحالي (بالكيلومتر)</label>
+                <select id="oilType">
+                    <option value="5000">5,000 كم</option>
+                    <option value="10000" selected>10,000 كم</option>
+                    <option value="7000">7,000 كم</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="addCar()">💾 حفظ السيارة سحابياً</button>
+        </div>
+    </div>
+
+    <div id="tab-logs" class="hidden">
+        <div class="card">
+            <div class="card-title">📝 تحديث عداد الكيلومترات أو تسجيل تغيير زيت</div>
+            <div class="form-group">
+                <label>اختر السيارة</label>
+                <select id="carSelect" onchange="onCarSelectChange()"></select>
+            </div>
+            <div class="form-group">
+                <label>قراءة العداد الجديدة (كم)</label>
+                <input type="number" id="updatedKm" placeholder="أدخل القراءة الحالية">
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: var(--success); margin-top: 10px;">
+                    <input type="checkbox" id="isOilChanged" style="width: auto;"> 🛢️ تم تغيير الزيت الآن في هذه الصيانة
+                </label>
+            </div>
+            <button class="btn btn-primary" onclick="updateMileage()">🔄 تحديث البيانات سحابياً</button>
+        </div>
     </div>
 </div>
 
-<header>
-    <h1>⚙️ مراقبة زيت الأسطول</h1>
-    <div id="dbStatus" class="status-badge offline">فحص الاتصال...</div>
-</header>
-
-<main>
-    <div id="tab-dashboard" class="tab-content active">
-        <div class="stats-grid">
-            <div class="stat-box total">
-                <span class="stat-count" id="stat-total">0</span>
-                <span class="stat-label">إجمالي الأسطول</span>
-            </div>
-            <div class="stat-box danger">
-                <span class="stat-count" id="stat-danger">0</span>
-                <span class="stat-label">متأخر (تغيير فوري)</span>
-            </div>
-            <div class="stat-box warning">
-                <span class="stat-count" id="stat-warning">0</span>
-                <span class="stat-label">قريب من الموعد</span>
-            </div>
-            <div class="stat-box success">
-                <span class="stat-count" id="stat-success">0</span>
-                <span class="stat-label">حالة ممتازة</span>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header-title">🚨 تنبيهات عاجلة وحرجة</div>
-            <div id="urgentAlertsContainer">
-                </div>
-        </div>
-    </div>
-
-    <div id="tab-alerts" class="tab-content">
-        <div class="filter-chips">
-            <button class="chip active" onclick="filterAlerts('all', this)">الكل</button>
-            <button class="chip" onclick="filterAlerts('danger', this)">متأخر</button>
-            <button class="chip" onclick="filterAlerts('warning', this)">قريب جداً (≤500 كم)</button>
-            <button class="chip" onclick="filterAlerts('alert', this)">قريب (≤1000 كم)</button>
-            <button class="chip" onclick="filterAlerts('success', this)">تمام</button>
-        </div>
-
-        <div id="allAlertsContainer">
-            </div>
-    </div>
-
-    <div id="tab-csv" class="tab-content">
-        <div class="card">
-            <div class="card-header-title">📅 رفع سجل الكيلومترات اليومي لقطع الأسطول</div>
-            <p style="font-size:12px; color: var(--gray-500); margin-bottom:14px;">ارفع ملف CSV يحتوي على الأعمدة التالية تماماً: <code style="font-weight:700; background:#eee; padding:2px 4px;">plate,km</code> حيث يمثل km المسافة المقطوعة اليوم ليتم إضافتها التراكمياً.</p>
-            
-            <div class="drop-zone" id="csvDropZone">
-                <span class="drop-zone-icon">📥</span>
-                <p id="dropZoneText" style="font-size:13px; font-weight:600;">اسحب ملف الـ CSV هنا أو اضغط للتصفح من الجهاز</p>
-                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-            </div>
-
-            <div id="csvPreviewSection" class="hidden" style="margin-top:20px;">
-                <h4 style="font-size:13px; font-weight:700; margin-bottom:8px;">📊 معاينة البيانات المستخرجة قبل الحفظ الفعلي</h4>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>رقم اللوحة</th><th>المسافة الحالية المضافة (كم)</th><th>الحالة بالسيستم</th></tr>
-                        </thead>
-                        <tbody id="csvPreviewBody"></tbody>
-                    </table>
-                </div>
-                <div class="btn-row">
-                    <button class="btn-success btn-block" onclick="commitCsvData()">✅ تأكيد وحفظ وتحديث العدادات</button>
-                    <button class="btn-secondary" onclick="cancelCsvUpload()">إلغاء</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-vehicles" class="tab-content">
-        <div class="card">
-            <div class="card-header-title" id="vehicleFormTitle">➕ إضافة سيارة جديدة للأسطول</div>
-            <input type="hidden" id="vehicle_edit_id">
-            
-            <div class="form-group">
-                <label>رقم اللوحة</label>
-                <input type="text" id="v_plate" placeholder="مثال: أ ب ج 123">
-            </div>
-            <div class="form-group">
-                <label>النوع / الموديل</label>
-                <input type="text" id="v_model" placeholder="مثال: تويوتا هيلوكس 2023">
-            </div>
-            <div class="form-group">
-                <label>نوع الزيت</label>
-                <input type="text" id="v_oilType" placeholder="مثال: شل 5W-30">
-            </div>
-            <div class="form-group">
-                <label>فترة تغيير الزيت (كيلومتر)</label>
-                <input type="number" id="v_oilInterval" placeholder="مثال: 5000 أو 10000">
-            </div>
-            <div class="form-group">
-                <label>قراءة العداد عند آخر تغيير زيت (كم)</label>
-                <input type="number" id="v_lastChangeKm" placeholder="مثال: 45000">
-            </div>
-            <div class="form-group">
-                <label>إجمالي الكيلومترات الحالية للسيارة (قراءة العداد الحالية)</label>
-                <input type="number" id="v_currentKm" placeholder="مثال: 48500">
-            </div>
-            
-            <div class="btn-row">
-                <button class="btn-primary btn-block" onclick="saveVehicleForm()">💾 حفظ بيانات السيارة</button>
-                <button class="btn-secondary hidden" id="btnCancelVehicleEdit" onclick="resetVehicleForm()">إلغاء التعديل</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header-title">📋 جميع سيارات الأسطول المسجلة</div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>اللوحة</th>
-                            <th>الموديل</th>
-                            <th>الباقة/الزيت</th>
-                            <th>العداد الحالي</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vehiclesTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-drivers" class="tab-content">
-        <div class="card">
-            <div class="card-header-title" id="driverFormTitle">➕ إضافة سائق جديد للشركة</div>
-            <input type="hidden" id="driver_edit_id">
-            
-            <div class="form-group">
-                <label>اسم السائق بالكامل</label>
-                <input type="text" id="d_name" placeholder="مثال: محمد أحمد علي">
-            </div>
-            <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input type="text" id="d_phone" placeholder="مثال: 01012345678">
-            </div>
-            <div class="form-group">
-                <label>ربط بالسيارة المخصصة له</label>
-                <select id="d_vehiclePlate">
-                    <option value="">-- اختر سيارة من الأسطول لتخصيصها --</option>
-                </select>
-            </div>
-            
-            <div class="btn-row">
-                <button class="btn-primary btn-block" onclick="saveDriverForm()">💾 حفظ السائق</button>
-                <button class="btn-secondary hidden" id="btnCancelDriverEdit" onclick="resetDriverForm()">إلغاء</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header-title">👥 السائقون الحاليون والسيارات المرتبطة بهم</div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th>
-                            <th>الهاتف</th>
-                            <th>السيارة المرتبطة</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="driversTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</main>
-
-<nav class="bottom-nav">
-    <button class="nav-item active" onclick="switchTab('dashboard', this)">
-        <span class="nav-icon">📊</span>
-        <span>الرئيسية</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('alerts', this)">
-        <span class="nav-icon">🚨</span>
-        <span>التنبيهات</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('csv', this)">
-        <span class="nav-icon">📥</span>
-        <span>رفع CSV</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('vehicles', this)">
-        <span class="nav-icon">🚗</span>
-        <span>السيارات</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('drivers', this)">
-        <span class="nav-icon">👥</span>
-        <span>السائقين</span>
-    </button>
-</nav>
-
 <script>
-    // ─── Variables & State ───
-    let db;
-    let localVehicles = {};
-    let localDrivers = {};
-    let currentAlertFilter = 'all';
-    let parsedCsvEntries = [];
+    // تم الربط المباشر بقاعدة بيانات مشروع oilrecord الخاص بك
+    const FIREBASE_URL = "https://oilrecord-default-rtdb.firebaseio.com/";
 
-    // ─── Initial Check & Firebase Startup ───
-    document.addEventListener("DOMContentLoaded", function() {
-        checkFirebaseConfig();
-    });
+    let localFleet = {};
 
-    function checkFirebaseConfig() {
-        const config = localStorage.getItem('fbConfig');
-        if (!config) {
-            document.getElementById('configOverlay').classList.remove('hidden');
-        } else {
-            initFirebase(JSON.parse(config));
-        }
-    }
-
-    function saveFirebaseConfig() {
-        const apiKey = document.getElementById('fb_apiKey').value.trim();
-        const authDomain = document.getElementById('fb_authDomain').value.trim();
-        const projectId = document.getElementById('fb_projectId').value.trim();
-        const databaseURL = document.getElementById('fb_databaseURL').value.trim();
-
-        if(!apiKey || !authDomain || !projectId || !databaseURL) {
-            showToast("⚠️ يرجى تعبئة كافة حقول الاتصال بـ Firebase", "warning");
-            return;
-        }
-
-        const config = { apiKey, authDomain, projectId, databaseURL };
-        localStorage.setItem('fbConfig', JSON.stringify(config));
-        document.getElementById('configOverlay').classList.add('hidden');
-        initFirebase(config);
-    }
-
-    function initFirebase(config) {
+    // الاتصال بـ Firebase
+    async function dbRequest(path, method = 'GET', body = null) {
         try {
-            firebase.initializeApp(config);
-            db = firebase.database();
-            
-            // فحص الاتصال بالإنترنت والـ Firebase سحابياً
-            db.ref('.info/connected').on('value', function(snapshot) {
-                const statusBadge = document.getElementById('dbStatus');
-                if (snapshot.val() === true) {
-                    statusBadge.textContent = "متصل سحابياً";
-                    statusBadge.className = "status-badge online";
-                } else {
-                    statusBadge.textContent = "غير متصل";
-                    statusBadge.className = "status-badge offline";
-                }
-            });
-
-            // الاستماع اللحظي للبيانات والمزامنة التلقائية بدون إنعاش الصفحة
-            startRealtimeSync();
-
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            const res = await fetch(`${FIREBASE_URL}${path}.json`, options);
+            document.getElementById('cloudStatus').textContent = "☁️ متصل وسحابي";
+            return await res.json();
         } catch (e) {
-            showToast("❌ خطأ في إعدادات الاتصال، يرجى إعادة التحقق", "danger");
-            localStorage.removeItem('fbConfig');
-            setTimeout(() => location.reload(), 2000);
+            document.getElementById('cloudStatus').textContent = "❌ غير متصل بالإنترنت";
+            return null;
         }
     }
 
-    function startRealtimeSync() {
-        // الاستماع الفوري للسيارات
-        db.ref('/vehicles').on('value', snapshot => {
-            localVehicles = snapshot.val() || {};
-            renderAllComponentDependents();
-        });
-
-        // الاستماع الفوري للسائقين
-        db.ref('/drivers').on('value', snapshot => {
-            localDrivers = snapshot.val() || {};
-            renderAllComponentDependents();
-        });
+    async function loadData() {
+        const data = await dbRequest('/fleet');
+        if (data) localFleet = data;
+        renderFleet();
+        populateDropdown();
     }
 
-    // إعادة معالجة ورسم الواجهات عند حدوث أي تعديل لحظي في السيرفر
-    function renderAllComponentDependents() {
-        calculateMetricsAndStats();
-        populateVehicleDropdowns();
-        renderVehiclesTable();
-        renderDriversTable();
-    }
+    function renderFleet() {
+        const listDiv = document.getElementById('fleetList');
+        listDiv.innerHTML = '';
+        
+        let total = 0;
+        let alerts = 0;
 
-    // ─── Core Logic Rules & Processing ───
-    function getVehicleCalculations(v) {
-        const currentKm = parseFloat(v.currentKm) || 0;
-        const lastChangeKm = parseFloat(v.lastChangeKm) || 0;
-        const oilInterval = parseFloat(v.oilInterval) || 0;
-
-        const remainingKm = lastChangeKm + oilInterval - currentKm;
-        let usagePercent = ((currentKm - lastChangeKm) / oilInterval) * 100;
-        if(usagePercent > 100) usagePercent = 100;
-        if(usagePercent < 0) usagePercent = 0;
-
-        let status = 'success'; // تمام
-        if (remainingKm <= 0) {
-            status = 'danger'; // متأخر
-        } else if (remainingKm <= 500) {
-            status = 'warning'; // قريب جداً
-        } else if (remainingKm <= 1000) {
-            status = 'alert'; // قريب
-        }
-
-        // إيجاد السائق المرتبط
-        let driverName = "لا يوجد سائق معين";
-        for (let dId in localDrivers) {
-            if (localDrivers[dId].vehiclePlate === v.plate) {
-                driverName = localDrivers[dId].name;
-                break;
-            }
-        }
-
-        return { remainingKm, usagePercent, status, driverName };
-    }
-
-    function calculateMetricsAndStats() {
-        let total = 0, danger = 0, warning = 0, success = 0;
-        let urgentHtml = '';
-        let allAlertsHtml = '';
-
-        for (let key in localVehicles) {
+        for (let id in localFleet) {
             total++;
-            const v = localVehicles[key];
-            const calcs = getVehicleCalculations(v);
+            const car = localFleet[id];
+            
+            // حساب الكيلومترات المستهلكة والمتبقية
+            const kmDrivenSinceChange = car.currentKm - car.lastChangeKm;
+            const kmRemaining = car.oilType - kmDrivenSinceChange;
+            
+            let alertClass = '';
+            let isAlert = false;
+            let isWarning = false;
 
-            if (calcs.status === 'danger') danger++;
-            else if (calcs.status === 'warning' || calcs.status === 'alert') warning++;
-            else success++;
-
-            // تجهيز كود الـ HTML لعرض كروت السيارات ومستويات التقدم
-            let statusText = "حالة ممتازة";
-            let badgeClass = "success";
-            if(calcs.status === 'danger') { statusText = "⚠️ متأخر (تغيير فوري!)"; badgeClass = "danger"; }
-            if(calcs.status === 'warning') { statusText = "🔴 قريب جداً (≤ 500 كم)"; badgeClass = "warning"; }
-            if(calcs.status === 'alert') { statusText = "🟡 قريب (≤ 1000 كم)"; badgeClass = "alert"; }
-
-            const cardHtml = `
-                <div class="vehicle-item">
-                    <div class="vehicle-info-top">
-                        <div>
-                            <span class="vehicle-title">🚗 لوحة: ${v.plate}</span>
-                            <div class="vehicle-meta">الموديل: ${v.model} | السائق: <strong>${calcs.driverName}</strong></div>
-                        </div>
-                        <span class="badge ${badgeClass}">${statusText}</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill ${calcs.status}" style="width: ${calcs.usagePercent}%"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span>استهلاك الزيت: ${calcs.usagePercent.toFixed(0)}%</span>
-                            <span>المتبقي: ${calcs.remainingKm} كم</span>
-                        </div>
-                    </div>
-                    <div style="font-size:12px; color: var(--gray-500); display:flex; justify-content:space-between; margin-top:4px;">
-                        <span>آخر غيار عند: ${v.lastChangeKm} كم</span>
-                        <span>العداد الحالي: ${v.currentKm} كم</span>
-                    </div>
-                </div>`;
-
-            // إضافتها لقائمة التنبيهات الشاملة بناءً على الفلتر النشط الحالي
-            if (currentAlertFilter === 'all' || currentAlertFilter === calcs.status) {
-                allAlertsHtml += cardHtml;
+            if (kmRemaining <= 0) {
+                alertClass = 'alert-active';
+                alerts++;
+                isAlert = true;
+            } else if (kmRemaining <= 500) {
+                alertClass = 'alert-warning';
+                isWarning = true;
             }
 
-            // إضافتها للرئيسية كإنذارات حرجة (متأخر + قريب جداً وقريب)
-            if (calcs.status === 'danger' || calcs.status === 'warning' || calcs.status === 'alert') {
-                urgentHtml += cardHtml;
-            }
+            const card = document.createElement('div');
+            card.className = `car-card ${alertClass}`;
+            card.innerHTML = `
+                <div class="car-header">
+                    <span class="car-title-text">${car.name}</span>
+                    <span class="car-plate">${car.plate}</span>
+                </div>
+                <div class="car-grid">
+                    <div class="grid-item"><div class="item-lbl">العداد الحالي</div><div class="item-val">${car.currentKm} كم</div></div>
+                    <div class="grid-item"><div class="item-lbl">آخر تغيير زيت</div><div class="item-val">${car.lastChangeKm} كم</div></div>
+                    <div class="grid-item"><div class="item-lbl">نوع الزيت</div><div class="item-val">${car.oilType} كم</div></div>
+                    <div class="grid-item"><div class="item-lbl">المتبقي للتغيير</div><div class="item-val">${kmRemaining} كم</div></div>
+                </div>
+                ${isAlert ? '<div class="alert-banner banner-danger">⚠️ يجب تغيير الزيت فوراً! تجاورت المسافة المسموحة</div>' : ''}
+                ${isWarning ? '<div class="alert-banner banner-warning">⚠️ اقترب موعد تغيير الزيت (أقل من 500 كم متبقي)</div>' : ''}
+                <button class="btn btn-danger" onclick="deleteCar('${id}')">🗑️ حذف السيارة</button>
+            `;
+            listDiv.appendChild(card);
         }
 
-        // تحديث العدادات الرقمية في شاشة لوحة المعلومات الرئيسية
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-danger').textContent = danger;
-        document.getElementById('stat-warning').textContent = warning;
-        document.getElementById('stat-success').textContent = success;
+        document.getElementById('totalCars').textContent = total;
+        document.getElementById('alertCars').textContent = alerts;
 
-        document.getElementById('urgentAlertsContainer').innerHTML = urgentHtml || '<p style="text-align:center; font-size:13px; color:var(--success); font-weight:600; padding:10px;">🟢 كل السيارات تمام ولا توجد أي تنبيهات حرجة حالياً.</p>';
-        document.getElementById('allAlertsContainer').innerHTML = allAlertsHtml || '<p style="text-align:center; font-size:13px; color:var(--gray-500); padding:10px;">لا توجد مركبات تطابق التصفية المختارة.</p>';
-    }
-
-    function filterAlerts(status, el) {
-        currentAlertFilter = status;
-        document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        calculateMetricsAndStats();
-    }
-
-    // ─── Vehicles Control Screen ───
-    async function saveVehicleForm() {
-        const plate = document.getElementById('v_plate').value.trim();
-        const model = document.getElementById('v_model').value.trim();
-        const oilType = document.getElementById('v_oilType').value.trim();
-        const oilInterval = parseFloat(document.getElementById('v_oilInterval').value);
-        const lastChangeKm = parseFloat(document.getElementById('v_lastChangeKm').value);
-        const currentKm = parseFloat(document.getElementById('v_currentKm').value);
-
-        if(!plate || !model || !oilType || isNaN(oilInterval) || isNaN(lastChangeKm) || isNaN(currentKm)) {
-            showToast("⚠️ يرجى ملء كافة تفاصيل المركبة بشكل صحيح", "warning");
-            return;
+        if (total === 0) {
+            listDiv.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:30px; font-size:13px;">لا توجد سيارات مسجلة حالياً. اضغط على "إضافة سيارة" للبدء.</div>';
         }
+    }
 
-        const plateId = plate.replace(/\s+/g, '_');
-        const vehicleData = {
-            plate, model, oilType, oilInterval, lastChangeKm, currentKm,
-            lastChangeDate: new Date().toISOString().split('T')[0]
+    async function addCar() {
+        const name = document.getElementById('carName').value.trim();
+        const plate = document.getElementById('carPlate').value.trim();
+        const currentKm = parseInt(document.getElementById('currentKm').value);
+        const oilType = parseInt(document.getElementById('oilType').value);
+
+        if (!name || !plate || isNaN(currentKm)) { alert('يرجى ملء كافة الحقول بشكل صحيح'); return; }
+
+        const id = 'car_' + Date.now();
+        const newCar = {
+            name,
+            plate,
+            currentKm,
+            oilType,
+            lastChangeKm: currentKm // عند البداية نعتبر أن الزيت تم تغييره عند العداد الحالي
         };
 
-        try {
-            await db.ref(`/vehicles/${plateId}`).set(vehicleData);
-            showToast("✅ تم حفظ وتحديث بيانات السيارة بنجاح");
-            resetVehicleForm();
-        } catch(e) {
-            showToast("❌ فشل الاتصال بقاعدة البيانات", "danger");
-        }
-    }
-
-    function renderVehiclesTable() {
-        const tbody = document.getElementById('vehiclesTableBody');
-        tbody.innerHTML = '';
+        localFleet[id] = newCar;
+        await dbRequest(`/fleet/${id}`, 'PUT', newCar);
         
-        for (let id in localVehicles) {
-            const v = localVehicles[id];
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${v.plate}</strong></td>
-                <td>${v.model}</td>
-                <td>${v.oilType} (${v.oilInterval}K)</td>
-                <td>${v.currentKm} كم</td>
-                <td class="actions-cell">
-                    <button class="btn-success btn-table-action" onclick="markOilChanged('${id}')">🛢️ تم التغيير</button>
-                    <button class="btn-primary btn-table-action" onclick="editVehicle('${id}')">✏️</button>
-                    <button class="btn-danger btn-table-action" onclick="deleteVehicle('${id}')">❌</button>
-                </td>`;
-            tbody.appendChild(tr);
-        }
-        if(tbody.innerHTML === '') {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--gray-500);">لا توجد مركبات مدخلة بالأسطول حالياً.</td></tr>`;
-        }
-    }
-
-    async function markOilChanged(id) {
-        if(confirm("هل تؤكد قيام الفني بتغيير زيت المحرك الحالي لهذه السيارة وتصفير مؤشر الاستهلاك؟")) {
-            const v = localVehicles[id];
-            try {
-                await db.ref(`/vehicles/${id}`).update({
-                    lastChangeKm: v.currentKm,
-                    lastChangeDate: new Date().toISOString().split('T')[0]
-                });
-                showToast("🛢️ تم تحديث غيار الزيت بنجاح وتصفير الحساب لـ " + v.plate);
-            } catch(e) { showToast("❌ فشل التحديث", "danger"); }
-        }
-    }
-
-    function editVehicle(id) {
-        const v = localVehicles[id];
-        document.getElementById('vehicle_edit_id').value = id;
-        document.getElementById('v_plate').value = v.plate;
-        document.getElementById('v_model').value = v.model;
-        document.getElementById('v_oilType').value = v.oilType;
-        document.getElementById('v_oilInterval').value = v.oilInterval;
-        document.getElementById('v_lastChangeKm').value = v.lastChangeKm;
-        document.getElementById('v_currentKm').value = v.currentKm;
-
-        document.getElementById('vehicleFormTitle').textContent = "✏️ تعديل بيانات السيارة الحالية";
-        document.getElementById('btnCancelVehicleEdit').classList.remove('hidden');
-    }
-
-    function resetVehicleForm() {
-        document.getElementById('vehicle_edit_id').value = '';
-        ['v_plate', 'v_model', 'v_oilType', 'v_oilInterval', 'v_lastChangeKm', 'v_currentKm'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('vehicleFormTitle').textContent = "➕ إضافة سيارة جديدة للأسطول";
-        document.getElementById('btnCancelVehicleEdit').classList.add('hidden');
-    }
-
-    async function deleteVehicle(id) {
-        if(confirm("⚠️ تحذير: هل أنت متأكد من حذف هذه السيارة نهائياً من النظام؟")) {
-            await db.ref(`/vehicles/${id}`).remove();
-            showToast("🗑️ تم حذف السيارة بنجاح");
-        }
-    }
-
-    // ─── Drivers Screen Control ───
-    function populateVehicleDropdowns() {
-        const select = document.getElementById('d_vehiclePlate');
-        // حفظ القيمة المحددة حالياً لتجنب فقدانها عند التحديث التلقائي
-        const currentVal = select.value;
+        // تفريغ الحقول
+        document.getElementById('carName').value = '';
+        document.getElementById('carPlate').value = '';
+        document.getElementById('currentKm').value = '';
         
-        select.innerHTML = '<option value="">-- اختر سيارة من الأسطول لتخصيصها --</option>';
-        for(let id in localVehicles) {
-            const opt = document.createElement('option');
-            opt.value = localVehicles[id].plate;
-            opt.textContent = `🚗 لوحة [ ${localVehicles[id].plate} ] - ${localVehicles[id].model}`;
-            select.appendChild(opt);
-        }
-        select.value = currentVal;
+        alert('✅ تم حفظ السيارة بنجاح ومزامنتها سحابياً!');
+        switchTab('fleet');
+        loadData();
     }
 
-    async function saveDriverForm() {
-        const name = document.getElementById('d_name').value.trim();
-        const phone = document.getElementById('d_phone').value.trim();
-        const vehiclePlate = document.getElementById('d_vehiclePlate').value;
-
-        if(!name || !phone) {
-            showToast("⚠️ يرجى إدخال اسم السائق ورقم جواله", "warning");
-            return;
-        }
-
-        const driverId = document.getElementById('driver_edit_id').value || name.replace(/\s+/g, '_') + '_' + Date.now();
-        const driverData = { name, phone, vehiclePlate };
-
-        try {
-            await db.ref(`/drivers/${driverId}`).set(driverData);
-            showToast("✅ تم حفظ السائق وتحديث الملف السحابي");
-            resetDriverForm();
-        } catch(e) { showToast("❌ فشل الاتصال بقاعدة البيانات", "danger"); }
-    }
-
-    function renderDriversTable() {
-        const tbody = document.getElementById('driversTableBody');
-        tbody.innerHTML = '';
-        
-        for (let id in localDrivers) {
-            const d = localDrivers[id];
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${d.name}</strong></td>
-                <td>${d.phone}</td>
-                <td><span class="badge ${d.vehiclePlate ? 'success':'danger'}">${d.vehiclePlate || 'غير مرتبط بسيارة'}</span></td>
-                <td class="actions-cell">
-                    <button class="btn-primary btn-table-action" onclick="editDriver('${id}')">✏️</button>
-                    <button class="btn-danger btn-table-action" onclick="deleteDriver('${id}')">❌</button>
-                </td>`;
-            tbody.appendChild(tr);
-        }
-        if(tbody.innerHTML === '') {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--gray-500);">لا يوجد سائقون مسجلون بالنظام حتى الآن.</td></tr>`;
+    function populateDropdown() {
+        const select = document.getElementById('carSelect');
+        select.innerHTML = '<option value="">-- اختر السيارة من القائمة --</option>';
+        for (let id in localFleet) {
+            select.innerHTML += `<option value="${id}">${localFleet[id].name} (${localFleet[id].plate})</option>`;
         }
     }
 
-    function editDriver(id) {
-        const d = localDrivers[id];
-        document.getElementById('driver_edit_id').value = id;
-        document.getElementById('d_name').value = d.name;
-        document.getElementById('d_phone').value = d.phone;
-        document.getElementById('d_vehiclePlate').value = d.vehiclePlate;
-
-        document.getElementById('driverFormTitle').textContent = "✏️ تعديل بيانات وتخصيص السائق";
-        document.getElementById('btnCancelDriverEdit').classList.remove('hidden');
-    }
-
-    function resetDriverForm() {
-        document.getElementById('driver_edit_id').value = '';
-        ['d_name', 'd_phone', 'd_vehiclePlate'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('driverFormTitle').textContent = "➕ إضافة سائق جديد للشركة";
-        document.getElementById('btnCancelDriverEdit').classList.add('hidden');
-    }
-
-    async function deleteDriver(id) {
-        if(confirm("هل تود إزالة السائق المحدد من سجلات الشركة نهائياً؟")) {
-            await db.ref(`/drivers/${id}`).remove();
-            showToast("🗑️ تم حذف السائق بنجاح");
-        }
-    }
-
-    // ─── Daily CSV Import Logic ───
-    const dropZone = document.getElementById('csvDropZone');
-    const fileInput = document.getElementById('csvFileInput');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if(e.dataTransfer.files.length) handleSelectedCsvFile(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        if(fileInput.files.length) handleSelectedCsvFile(fileInput.files[0]);
-    });
-
-    function handleSelectedCsvFile(file) {
-        if(!file.name.endsWith('.csv')) { showToast("⚠️ امتداد الملف غير مدعوم، ارفع ملف CSV فقط", "warning"); return; }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            parseCsvContent(e.target.result);
-        };
-        reader.readAsText(file, "UTF-8");
-    }
-
-    function parseCsvContent(text) {
-        const lines = text.split(/\r?\n/);
-        parsedCsvEntries = [];
-        
-        if(lines.length < 2) { showToast("⚠️ ملف الـ CSV المرفوع فارغ أو تالف", "warning"); return; }
-        
-        // استبعاد ترويسة الملف وتفقيط السطور
-        for(let i=1; i<lines.length; i++) {
-            if(!lines[i].trim()) continue;
-            const cols = lines[i].split(',');
-            if(cols.length >= 2) {
-                const plate = cols[0].trim();
-                const km = parseFloat(cols[1].trim());
-                if(plate && !isNaN(km)) {
-                    parsedCsvEntries.push({ plate, km });
-                }
-            }
-        }
-
-        // إخراج المعاينة قبل الحفظ النهائي
-        const tbody = document.getElementById('csvPreviewBody');
-        tbody.innerHTML = '';
-        
-        parsedCsvEntries.forEach(entry => {
-            const plateId = entry.plate.replace(/\s+/g, '_');
-            const exist = !!localVehicles[plateId];
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${entry.plate}</strong></td>
-                <td>+ ${entry.km} كم مقطوعة اليوم</td>
-                <td><span class="badge ${exist ? 'success':'danger'}">${exist ? 'مركبة مسجلة':'⚠️ غير موجودة بالأسطول'}</span></td>`;
-            tbody.appendChild(tr);
-        });
-
-        document.getElementById('csvPreviewSection').classList.remove('hidden');
-        document.getElementById('dropZoneText').textContent = "📄 تم تحميل ومعاينة الملف بنجاح!";
-    }
-
-    async function commitCsvData() {
-        if(!parsedCsvEntries.length) return;
-        
-        const dateStr = new Date().toISOString().split('T')[0];
-        let updateCount = 0;
-
-        // جلب سجلات هذا اليوم لمنع التكرار
-        let dailySnapshot = await db.ref(`/dailyLogs/${dateStr}`).once('value');
-        let dailyLogsToday = dailySnapshot.val() || {};
-
-        for(let entry of parsedCsvEntries) {
-            const plateId = entry.plate.replace(/\s+/g, '_');
-            
-            // التحقق من وجود السيارة بالأسطول لمنع رفع أخطاء الإدخال
-            if(localVehicles[plateId]) {
-                // منع تكرار نفس التاريخ اليومي لنفس اللوحة
-                if(dailyLogsToday[plateId]) {
-                    console.log(`تم تخطي اللوحة ${entry.plate} لرفعها مسبقاً في تاريخ اليوم.`);
-                    continue; 
-                }
-
-                // 1. تحديث إجمالي العداد التراكمي في ملف السيارة الحالية
-                const newCurrentKm = (parseFloat(localVehicles[plateId].currentKm) || 0) + entry.km;
-                await db.ref(`/vehicles/${plateId}`).update({ currentKm: newCurrentKm });
-
-                // 2. تدوين السجل اليومي في قاعدة البيانات السحابية
-                await db.ref(`/dailyLogs/${dateStr}/${plateId}`).set({
-                    km: entry.km,
-                    uploadedAt: firebase.database.ServerValue.TIMESTAMP
-                });
-
-                updateCount++;
-            }
-        }
-
-        showToast(`✅ اكتمل الحفظ! تم تحديث مسافات عدد [ ${updateCount} ] مركبة بالأسطول.`);
-        cancelCsvUpload();
-        switchTab('dashboard');
-    }
-
-    function cancelCsvUpload() {
-        parsedCsvEntries = [];
-        document.getElementById('csvPreviewSection').classList.add('hidden');
-        document.getElementById('csvFileInput').value = '';
-        document.getElementById('dropZoneText').textContent = "اسحب ملف الـ CSV هنا أو اضغط للتصفح من الجهاز";
-    }
-
-    // ─── Tab Switcher Navigation ───
-    function switchTab(tabId, buttonElement) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
-
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        
-        if (buttonElement) {
-            buttonElement.classList.add('active');
+    function onCarSelectChange() {
+        const id = document.getElementById('carSelect').value;
+        if(id && localFleet[id]) {
+            document.getElementById('updatedKm').value = localFleet[id].currentKm;
         } else {
-            // البحث عن الزر المطابق في حال الانتقال البرمجي الداخلي
-            const items = document.querySelectorAll('.bottom-nav .nav-item');
-            const idx = ['dashboard', 'alerts', 'csv', 'vehicles', 'drivers'].indexOf(tabId);
-            if(idx !== -1 && items[idx]) items[idx].classList.add('active');
-        }
-
-        // في حال العودة للرئيسية أو التنبيهات، نقوم بإعادة بناء المؤشرات
-        if(tabId === 'dashboard' || tabId === 'alerts') {
-            calculateMetricsAndStats();
+            document.getElementById('updatedKm').value = '';
         }
     }
 
-    // رسائل التنبيه الفورية المنبثقة
-    function showToast(message, type = 'success') {
-        const oldToast = document.querySelector('.toast');
-        if (oldToast) oldToast.remove();
+    async function updateMileage() {
+        const id = document.getElementById('carSelect').value;
+        const newKm = parseInt(document.getElementById('updatedKm').value);
+        const isOilChanged = document.getElementById('isOilChanged').checked;
 
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerHTML = `<span>${message}</span>`;
-        if (type === 'warning') toast.style.backgroundColor = '#d03801';
-        if (type === 'danger') toast.style.backgroundColor = '#e02424';
+        if (!id || isNaN(newKm)) { alert('يرجى اختيار السيارة وإدخال القراءة الجديدة للعداد'); return; }
+        if (newKm < localFleet[id].currentKm) { alert('خطأ: لا يمكن للعداد الجديد أن يكون أقل من العداد الحالي للسيارة!'); return; }
+
+        localFleet[id].currentKm = newKm;
+        if (isOilChanged) {
+            localFleet[id].lastChangeKm = newKm;
+        }
+
+        await dbRequest(`/fleet/${id}`, 'PUT', localFleet[id]);
+        document.getElementById('isOilChanged').checked = false;
+        document.getElementById('updatedKm').value = '';
         
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        alert('🔄 تم تحديث قراءة العداد بنجاح سحابياً!');
+        switchTab('fleet');
+        loadData();
     }
-</script>
 
+    async function deleteCar(id) {
+        if (confirm('⚠️ هل أنت متأكد من حذف هذه السيارة نهائياً من النظام السحابي؟')) {
+            await dbRequest(`/fleet/${id}`, 'DELETE');
+            delete localFleet[id];
+            loadData();
+        }
+    }
+
+    function switchTab(tab) {
+        ['fleet', 'add', 'logs'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        if(tab === 'logs') populateDropdown();
+    }
+
+    // تحميل البيانات عند فتح الصفحة لأول مرة
+    loadData();
+</script>
 </body>
 </html>
