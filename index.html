@@ -34,8 +34,8 @@
         .container { padding: 16px; max-width: 600px; margin: 0 auto; }
 
         /* Navigation Tabs */
-        .tabs { display: flex; background: white; border-radius: var(--radius); padding: 4px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--gray-border); }
-        .tab-btn { flex: 1; border: none; background: none; padding: 10px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tabs { display: flex; background: white; border-radius: var(--radius); padding: 4px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--gray-border); flex-wrap: wrap; }
+        .tab-btn { flex: 1; min-width: 75px; border: none; background: none; padding: 10px 5px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--primary); color: white; }
 
         /* Cards */
@@ -157,6 +157,7 @@
             </div>
             <button class="btn btn-primary" onclick="updateMileage()">🔄 تحديث البيانات سحابياً</button>
         </div>
+    </div>
 
     <div id="tab-csv" class="hidden">
         <div class="card">
@@ -223,11 +224,10 @@
             </div>
         </div>
     </div>
-    </div>
 </div>
 
 <script>
-    // تم الربط المباشر بقاعدة بيانات مشروع oilrecord الخاص بك
+    // تم الربط السحابي المباشر بمشروعك
     const FIREBASE_URL = "https://oilrecord-default-rtdb.firebaseio.com/";
 
     let localFleet = {};
@@ -264,7 +264,6 @@
             total++;
             const car = localFleet[id];
             
-            // حساب الكيلومترات المستهلكة والمتبقية
             const kmDrivenSinceChange = car.currentKm - car.lastChangeKm;
             const kmRemaining = car.oilType - kmDrivenSinceChange;
             
@@ -323,13 +322,12 @@
             plate,
             currentKm,
             oilType,
-            lastChangeKm: currentKm // عند البداية نعتبر أن الزيت تم تغييره عند العداد الحالي
+            lastChangeKm: currentKm
         };
 
         localFleet[id] = newCar;
         await dbRequest(`/fleet/${id}`, 'PUT', newCar);
         
-        // تفريغ الحقول
         document.getElementById('carName').value = '';
         document.getElementById('carPlate').value = '';
         document.getElementById('currentKm').value = '';
@@ -388,15 +386,21 @@
     }
 
     function switchTab(tab) {
-        ['fleet', 'add', 'logs', 'csv', 'settings'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
-        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+        ['fleet', 'add', 'logs', 'csv', 'settings'].forEach(t => {
+            const el = document.getElementById(`tab-${t}`);
+            if (el) el.classList.add('hidden');
+        });
+        
+        const currentTab = document.getElementById(`tab-${tab}`);
+        if (currentTab) currentTab.classList.remove('hidden');
         
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
         
         if(tab === 'logs') populateDropdown();
     }
-
 
     // =================== EMAIL SETTINGS ===================
     let emailSettings = JSON.parse(localStorage.getItem('emailjs_settings') || JSON.stringify({serviceId:'service_6hhnkol', templateId:'template_5cgrttj', pubKey:'MQQxx2kYxlRIxfbh5'}));
@@ -586,7 +590,7 @@
         document.getElementById('csvFileInput').value = '';
     }
 
-    // تحميل البيانات عند فتح الصفحة لأول مرة
+    // التشغيل المبدئي للبيانات
     loadData();
     loadEmailSettingsUI();
 </script>
