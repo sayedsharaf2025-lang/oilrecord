@@ -94,6 +94,7 @@
         <button class="tab-btn active" onclick="switchTab('fleet')">📋 الأسطول</button>
         <button class="tab-btn" onclick="switchTab('add')">➕ إضافة سيارة</button>
         <button class="tab-btn" onclick="switchTab('logs')">📝 تحديث العداد</button>
+        <button class="tab-btn" onclick="switchTab('csv')">📂 رفع ملف</button>
     </div>
 
     <div id="tab-fleet">
@@ -155,6 +156,32 @@
             </div>
             <button class="btn btn-primary" onclick="updateMileage()">🔄 تحديث البيانات سحابياً</button>
         </div>
+
+    <div id="tab-csv" class="hidden">
+        <div class="card">
+            <div class="card-title">📂 رفع ملف مسافات يومية</div>
+            <div class="form-group">
+                <label>اختر ملف CSV أو Excel</label>
+                <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="padding:8px;">
+            </div>
+            <div style="background:var(--gray-bg);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                📌 <strong>شكل الملف المطلوب:</strong><br>
+                الأعمدة: <code>رقم اللوحة | التاريخ | المسافة (كم)</code><br>
+                مثال: <code>أ ب ج 1234 , 2024-01-15 , 250</code>
+            </div>
+            <button class="btn btn-primary" onclick="processCsvFile()">⚡ معالجة الملف ورفع البيانات</button>
+        </div>
+        <div id="csvResultBox" class="hidden">
+            <div class="card" id="csvSummaryCard">
+                <div class="card-title">📊 نتيجة المعالجة</div>
+                <div id="csvSummaryContent"></div>
+            </div>
+            <div class="card" id="csvSkippedCard" class="hidden">
+                <div class="card-title" style="color:var(--danger);">⚠️ عربيات غير مسجلة (تم تجاهلها)</div>
+                <div id="csvSkippedContent"></div>
+            </div>
+        </div>
+    </div>
     </div>
 </div>
 
@@ -319,13 +346,145 @@
     }
 
     function switchTab(tab) {
-        ['fleet', 'add', 'logs'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+        ['fleet', 'add', 'logs', 'csv'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
         document.getElementById(`tab-${tab}`).classList.remove('hidden');
         
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         event.currentTarget.classList.add('active');
         
         if(tab === 'logs') populateDropdown();
+    }
+
+    // =================== CSV / EXCEL PROCESSING ===================
+
+    // تحميل مكتبة SheetJS لقراءة Excel
+    function loadSheetJS(callback) {
+        if (window.XLSX) { callback(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = callback;
+        document.head.appendChild(s);
+    }
+
+    function processCsvFile() {
+        const fileInput = document.getElementById('csvFileInput');
+        if (!fileInput.files.length) { alert('يرجى اختيار ملف أولاً'); return; }
+
+        const file = fileInput.files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        loadSheetJS(() => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let rows = [];
+                if (ext === 'csv') {
+                    rows = parseCSV(e.target.result);
+                } else {
+                    const wb = XLSX.read(e.target.result, { type: 'binary' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                }
+                processRows(rows);
+            };
+            if (ext === 'csv') reader.readAsText(file, 'UTF-8');
+            else reader.readAsBinaryString(file);
+        });
+    }
+
+    function parseCSV(text) {
+        return text.trim().split('\n').map(line =>
+            line.split(',').map(c => c.trim())
+        );
+    }
+
+    async function processRows(rows) {
+        // تجاهل الصف الأول لو كان هيدر (لو ما فيهوش أرقام)
+        let dataRows = rows.filter(r => r.length >= 3);
+        if (dataRows.length && isNaN(parseFloat(dataRows[0][2]))) {
+            dataRows = dataRows.slice(1); // skip header
+        }
+
+        // تجميع المسافات لكل لوحة: { plate: { totalKm, dates[] } }
+        const plateMap = {};
+        dataRows.forEach(row => {
+            const plate = String(row[0]).trim();
+            const date  = String(row[1]).trim();
+            const km    = parseFloat(row[2]);
+            if (!plate || isNaN(km)) return;
+
+            if (!plateMap[plate]) plateMap[plate] = { totalKm: 0, dates: [] };
+            plateMap[plate].totalKm += km;
+            plateMap[plate].dates.push({ date, km });
+        });
+
+        // بناء فهرس اللوحات الموجودة في الأسطول
+        const registeredPlates = {}; // plate -> car_id
+        for (let id in localFleet) {
+            registeredPlates[localFleet[id].plate.trim()] = id;
+        }
+
+        const updated = [];
+        const skipped = [];
+
+        for (const plate in plateMap) {
+            const carId = registeredPlates[plate];
+            if (!carId) {
+                skipped.push(plate);
+                continue;
+            }
+
+            const { totalKm, dates } = plateMap[plate];
+            const car = localFleet[carId];
+            const newKm = car.currentKm + totalKm;
+
+            // تحديث العداد
+            localFleet[carId].currentKm = newKm;
+            await dbRequest(`/fleet/${carId}/currentKm`, 'PUT', newKm);
+
+            // حفظ سجل المسافات اليومية في Firebase
+            const logEntry = {
+                addedKm: totalKm,
+                newTotal: newKm,
+                uploadedAt: new Date().toISOString(),
+                details: dates
+            };
+            const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            await dbRequest(`/mileageLogs/${carId}/${logId}`, 'PUT', logEntry);
+
+            updated.push({ name: car.name, plate, addedKm: totalKm, newKm });
+        }
+
+        showCsvResults(updated, skipped);
+        if (updated.length) loadData();
+    }
+
+    function showCsvResults(updated, skipped) {
+        document.getElementById('csvResultBox').classList.remove('hidden');
+
+        // ملخص العربيات المحدثة
+        let summaryHtml = `<div style="color:var(--success);font-weight:700;font-size:13px;margin-bottom:10px;">✅ تم تحديث ${updated.length} عربية بنجاح</div>`;
+        if (updated.length) {
+            summaryHtml += updated.map(c => `
+                <div style="background:var(--success-light);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;">
+                    <strong>${c.name}</strong> (${c.plate})<br>
+                    ➕ مضاف: <strong>${c.addedKm} كم</strong> | العداد الجديد: <strong>${c.newKm} كم</strong>
+                </div>`).join('');
+        }
+        document.getElementById('csvSummaryContent').innerHTML = summaryHtml;
+
+        // العربيات المتجاهلة
+        const skippedCard = document.getElementById('csvSkippedCard');
+        if (skipped.length) {
+            skippedCard.classList.remove('hidden');
+            document.getElementById('csvSkippedContent').innerHTML = skipped.map(p =>
+                `<div style="background:#fee2e2;border-radius:6px;padding:6px 10px;margin-bottom:5px;font-size:12px;">🚫 لوحة: <strong>${p}</strong> — غير مسجلة في النظام</div>`
+            ).join('');
+        } else {
+            skippedCard.classList.add('hidden');
+        }
+
+        // تفريغ الملف
+        document.getElementById('csvFileInput').value = '';
     }
 
     // تحميل البيانات عند فتح الصفحة لأول مرة
