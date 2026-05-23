@@ -81,6 +81,7 @@
 
         .hidden { display: none !important; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -95,6 +96,7 @@
         <button class="tab-btn" onclick="switchTab('add')">➕ إضافة سيارة</button>
         <button class="tab-btn" onclick="switchTab('logs')">📝 تحديث العداد</button>
         <button class="tab-btn" onclick="switchTab('csv')">📂 رفع ملف</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ الإعدادات</button>
     </div>
 
     <div id="tab-fleet">
@@ -127,11 +129,10 @@
                 <input type="number" id="currentKm" placeholder="مثال: 150000">
             </div>
             <div class="form-group">
-                <label>مسافة الزيت الحالي (بالكيلومتر)</label>
+                <label>نوع الزيت الحالي (بالكيلومتر)</label>
                 <select id="oilType">
-                    <option value="4000">4,000 كم</option>
                     <option value="2800" selected>2,800 كم</option>
-                    <option value="7000">7,000 كم</option>
+                    <option value="4000">4,000 كم</option>
                 </select>
             </div>
             <button class="btn btn-primary" onclick="addCar()">💾 حفظ السيارة سحابياً</button>
@@ -165,20 +166,60 @@
                 <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="padding:8px;">
             </div>
             <div style="background:var(--gray-bg);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-                📌 <strong>شكل الملف المطلوب:</strong><br>
-                الأعمدة: <code>رقم اللوحة | التاريخ | المسافة (كم)</code><br>
-                مثال: <code>أ ب ج 1234 , 2024-01-15 , 250</code>
+                📌 <strong>شكل الملف المطلوب (3 أعمدة):</strong><br>
+                <code>رقم اللوحة , التاريخ , المسافة بالكم</code><br>
+                مثال: <code>ج ب أ 1234 , 2024-01-15 , 250</code>
             </div>
             <button class="btn btn-primary" onclick="processCsvFile()">⚡ معالجة الملف ورفع البيانات</button>
         </div>
         <div id="csvResultBox" class="hidden">
-            <div class="card" id="csvSummaryCard">
+            <div class="card">
                 <div class="card-title">📊 نتيجة المعالجة</div>
                 <div id="csvSummaryContent"></div>
             </div>
-            <div class="card" id="csvSkippedCard" class="hidden">
+            <div class="card" id="csvSkippedCard">
                 <div class="card-title" style="color:var(--danger);">⚠️ عربيات غير مسجلة (تم تجاهلها)</div>
                 <div id="csvSkippedContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-settings" class="hidden">
+        <div class="card">
+            <div class="card-title">📧 إعدادات إشعارات الإيميل</div>
+            <div style="background:var(--primary-light);border-radius:8px;padding:10px;font-size:12px;color:var(--primary);margin-bottom:14px;">
+                💡 يعمل النظام عبر <strong>EmailJS</strong> المجاني. سجّل على <a href="https://emailjs.com" target="_blank" style="color:var(--primary);font-weight:700;">emailjs.com</a> واحصل على بياناتك.
+            </div>
+            <div class="form-group">
+                <label>Service ID</label>
+                <input type="text" id="ejs_service" placeholder="مثال: service_xxxxxxx">
+            </div>
+            <div class="form-group">
+                <label>Template ID</label>
+                <input type="text" id="ejs_template" placeholder="مثال: template_xxxxxxx">
+            </div>
+            <div class="form-group">
+                <label>Public Key</label>
+                <input type="text" id="ejs_pubkey" placeholder="مثال: xxxxxxxxxxxxxxx">
+            </div>
+            <button class="btn btn-primary" onclick="saveEmailSettings()" style="margin-bottom:10px;">💾 حفظ إعدادات EmailJS</button>
+        </div>
+        <div class="card">
+            <div class="card-title">📬 قائمة الإيميلات المستقبِلة</div>
+            <div class="form-group" style="display:flex;gap:8px;">
+                <input type="email" id="newEmailInput" placeholder="أدخل إيميل جديد" style="flex:1;">
+                <button class="btn btn-primary" onclick="addEmail()" style="width:auto;padding:10px 16px;">➕</button>
+            </div>
+            <div id="emailListDisplay"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">🔔 مستويات التنبيه</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">يُرسل إيميل تنبيه تلقائياً عند الوصول لكل مستوى:</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                <div style="background:#fef3c7;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700;color:#92400e;">⚠️ أقل من 500 كم</div>
+                <div style="background:#fed7aa;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700;color:#9a3412;">🔶 أقل من 200 كم</div>
+                <div style="background:#fecaca;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700;color:#991b1b;">🔴 أقل من 100 كم</div>
+                <div style="background:#ef4444;border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:700;color:white;">🚨 أقل من 50 كم</div>
             </div>
         </div>
     </div>
@@ -333,6 +374,7 @@
         document.getElementById('updatedKm').value = '';
         
         alert('🔄 تم تحديث قراءة العداد بنجاح سحابياً!');
+        checkAndSendAlerts([id]);
         switchTab('fleet');
         loadData();
     }
@@ -346,7 +388,7 @@
     }
 
     function switchTab(tab) {
-        ['fleet', 'add', 'logs', 'csv'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+        ['fleet', 'add', 'logs', 'csv', 'settings'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
         document.getElementById(`tab-${tab}`).classList.remove('hidden');
         
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -355,9 +397,98 @@
         if(tab === 'logs') populateDropdown();
     }
 
-    // =================== CSV / EXCEL PROCESSING ===================
 
-    // تحميل مكتبة SheetJS لقراءة Excel
+    // =================== EMAIL SETTINGS ===================
+    let emailSettings = JSON.parse(localStorage.getItem('emailjs_settings') || JSON.stringify({serviceId:'service_6hhnkol', templateId:'template_5cgrttj', pubKey:'MQQxx2kYxlRIxfbh5'}));
+    let emailList = JSON.parse(localStorage.getItem('email_list') || '[]');
+
+    function saveEmailSettings() {
+        emailSettings = {
+            serviceId:  document.getElementById('ejs_service').value.trim(),
+            templateId: document.getElementById('ejs_template').value.trim(),
+            pubKey:     document.getElementById('ejs_pubkey').value.trim()
+        };
+        localStorage.setItem('emailjs_settings', JSON.stringify(emailSettings));
+        if (emailSettings.pubKey) emailjs.init(emailSettings.pubKey);
+        alert('✅ تم حفظ إعدادات الإيميل بنجاح!');
+    }
+
+    function addEmail() {
+        const val = document.getElementById('newEmailInput').value.trim();
+        if (!val || !val.includes('@')) { alert('يرجى إدخال إيميل صحيح'); return; }
+        if (emailList.includes(val)) { alert('الإيميل مضاف مسبقاً'); return; }
+        emailList.push(val);
+        localStorage.setItem('email_list', JSON.stringify(emailList));
+        document.getElementById('newEmailInput').value = '';
+        renderEmailList();
+    }
+
+    function removeEmail(idx) {
+        emailList.splice(idx, 1);
+        localStorage.setItem('email_list', JSON.stringify(emailList));
+        renderEmailList();
+    }
+
+    function renderEmailList() {
+        const div = document.getElementById('emailListDisplay');
+        if (!emailList.length) {
+            div.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:10px;">لا توجد إيميلات مضافة بعد</div>';
+            return;
+        }
+        div.innerHTML = emailList.map((em, i) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--gray-bg);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;">
+                <span>📧 ${em}</span>
+                <button onclick="removeEmail(${i})" style="border:none;background:var(--danger);color:white;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;">حذف</button>
+            </div>`).join('');
+    }
+
+    function loadEmailSettingsUI() {
+        if (emailSettings.serviceId)  document.getElementById('ejs_service').value  = emailSettings.serviceId;
+        if (emailSettings.templateId) document.getElementById('ejs_template').value = emailSettings.templateId;
+        if (emailSettings.pubKey)     document.getElementById('ejs_pubkey').value    = emailSettings.pubKey;
+        if (emailSettings.pubKey)     emailjs.init(emailSettings.pubKey);
+        renderEmailList();
+    }
+
+    // =================== ALERT THRESHOLDS ===================
+    const ALERT_LEVELS = [
+        { km: 500, label: '⚠️ تحذير',  color: '#92400e', bg: '#fef3c7' },
+        { km: 200, label: '🔶 تنبيه',  color: '#9a3412', bg: '#fed7aa' },
+        { km: 100, label: '🔴 خطر',    color: '#991b1b', bg: '#fecaca' },
+        { km: 50,  label: '🚨 عاجل',   color: '#ffffff', bg: '#ef4444' }
+    ];
+
+    async function sendAlertEmails(alerts) {
+        if (!emailList.length) return;
+        if (!emailSettings.serviceId || !emailSettings.templateId || !emailSettings.pubKey) return;
+
+        for (const email of emailList) {
+            const alertLines = alerts.map(a =>
+                `${a.label} | ${a.carName} (${a.plate}) | متبقي: ${a.remaining} كم`
+            ).join('\n');
+
+            await emailjs.send(emailSettings.serviceId, emailSettings.templateId, {
+                to_email:   email,
+                subject:    `🚗 تنبيه تغيير زيت - ${alerts.length} سيارة`,
+                alert_body: alertLines,
+                date:       new Date().toLocaleDateString('ar-EG')
+            });
+        }
+    }
+
+    function checkAndSendAlerts(updatedCarIds) {
+        const alerts = [];
+        for (const id of updatedCarIds) {
+            const car = localFleet[id];
+            if (!car) continue;
+            const remaining = car.oilType - (car.currentKm - car.lastChangeKm);
+            const level = ALERT_LEVELS.find(l => remaining < l.km);
+            if (level) alerts.push({ carName: car.name, plate: car.plate, remaining, label: level.label });
+        }
+        if (alerts.length) sendAlertEmails(alerts);
+    }
+
+    // =================== CSV / EXCEL PROCESSING ===================
     function loadSheetJS(callback) {
         if (window.XLSX) { callback(); return; }
         const s = document.createElement('script');
@@ -369,126 +500,95 @@
     function processCsvFile() {
         const fileInput = document.getElementById('csvFileInput');
         if (!fileInput.files.length) { alert('يرجى اختيار ملف أولاً'); return; }
-
         const file = fileInput.files[0];
-        const ext = file.name.split('.').pop().toLowerCase();
-
+        const ext  = file.name.split('.').pop().toLowerCase();
         loadSheetJS(() => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 let rows = [];
                 if (ext === 'csv') {
-                    rows = parseCSV(e.target.result);
+                    rows = e.target.result.trim().split('\n').map(l => l.split(',').map(c => c.trim()));
                 } else {
                     const wb = XLSX.read(e.target.result, { type: 'binary' });
-                    const ws = wb.Sheets[wb.SheetNames[0]];
-                    rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                    rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
                 }
                 processRows(rows);
             };
             if (ext === 'csv') reader.readAsText(file, 'UTF-8');
-            else reader.readAsBinaryString(file);
+            else               reader.readAsBinaryString(file);
         });
     }
 
-    function parseCSV(text) {
-        return text.trim().split('\n').map(line =>
-            line.split(',').map(c => c.trim())
-        );
-    }
-
     async function processRows(rows) {
-        // تجاهل الصف الأول لو كان هيدر (لو ما فيهوش أرقام)
         let dataRows = rows.filter(r => r.length >= 3);
-        if (dataRows.length && isNaN(parseFloat(dataRows[0][2]))) {
-            dataRows = dataRows.slice(1); // skip header
-        }
+        if (dataRows.length && isNaN(parseFloat(dataRows[0][2]))) dataRows = dataRows.slice(1);
 
-        // تجميع المسافات لكل لوحة: { plate: { totalKm, dates[] } }
         const plateMap = {};
         dataRows.forEach(row => {
             const plate = String(row[0]).trim();
             const date  = String(row[1]).trim();
             const km    = parseFloat(row[2]);
             if (!plate || isNaN(km)) return;
-
             if (!plateMap[plate]) plateMap[plate] = { totalKm: 0, dates: [] };
             plateMap[plate].totalKm += km;
             plateMap[plate].dates.push({ date, km });
         });
 
-        // بناء فهرس اللوحات الموجودة في الأسطول
-        const registeredPlates = {}; // plate -> car_id
-        for (let id in localFleet) {
-            registeredPlates[localFleet[id].plate.trim()] = id;
-        }
+        const registeredPlates = {};
+        for (let id in localFleet) registeredPlates[localFleet[id].plate.trim()] = id;
 
-        const updated = [];
-        const skipped = [];
+        const updated = [], skipped = [], updatedIds = [];
 
         for (const plate in plateMap) {
             const carId = registeredPlates[plate];
-            if (!carId) {
-                skipped.push(plate);
-                continue;
-            }
+            if (!carId) { skipped.push(plate); continue; }
 
             const { totalKm, dates } = plateMap[plate];
-            const car = localFleet[carId];
-            const newKm = car.currentKm + totalKm;
-
-            // تحديث العداد
+            const newKm = localFleet[carId].currentKm + totalKm;
             localFleet[carId].currentKm = newKm;
+
             await dbRequest(`/fleet/${carId}/currentKm`, 'PUT', newKm);
 
-            // حفظ سجل المسافات اليومية في Firebase
-            const logEntry = {
-                addedKm: totalKm,
-                newTotal: newKm,
-                uploadedAt: new Date().toISOString(),
-                details: dates
-            };
-            const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            const logId    = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+            const logEntry = { addedKm: totalKm, newTotal: newKm, uploadedAt: new Date().toISOString(), details: dates };
             await dbRequest(`/mileageLogs/${carId}/${logId}`, 'PUT', logEntry);
 
-            updated.push({ name: car.name, plate, addedKm: totalKm, newKm });
+            updated.push({ name: localFleet[carId].name, plate, addedKm: totalKm, newKm });
+            updatedIds.push(carId);
         }
 
         showCsvResults(updated, skipped);
-        if (updated.length) loadData();
+        if (updatedIds.length) {
+            loadData();
+            checkAndSendAlerts(updatedIds);
+        }
     }
 
     function showCsvResults(updated, skipped) {
         document.getElementById('csvResultBox').classList.remove('hidden');
+        let html = `<div style="color:var(--success);font-weight:700;font-size:13px;margin-bottom:10px;">✅ تم تحديث ${updated.length} عربية بنجاح</div>`;
+        html += updated.map(c => `
+            <div style="background:var(--success-light);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;">
+                <strong>${c.name}</strong> (${c.plate})<br>
+                ➕ مضاف: <strong>${c.addedKm} كم</strong> | العداد الجديد: <strong>${c.newKm} كم</strong>
+            </div>`).join('');
+        document.getElementById('csvSummaryContent').innerHTML = html;
 
-        // ملخص العربيات المحدثة
-        let summaryHtml = `<div style="color:var(--success);font-weight:700;font-size:13px;margin-bottom:10px;">✅ تم تحديث ${updated.length} عربية بنجاح</div>`;
-        if (updated.length) {
-            summaryHtml += updated.map(c => `
-                <div style="background:var(--success-light);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;">
-                    <strong>${c.name}</strong> (${c.plate})<br>
-                    ➕ مضاف: <strong>${c.addedKm} كم</strong> | العداد الجديد: <strong>${c.newKm} كم</strong>
-                </div>`).join('');
-        }
-        document.getElementById('csvSummaryContent').innerHTML = summaryHtml;
-
-        // العربيات المتجاهلة
         const skippedCard = document.getElementById('csvSkippedCard');
         if (skipped.length) {
-            skippedCard.classList.remove('hidden');
+            skippedCard.style.display = '';
             document.getElementById('csvSkippedContent').innerHTML = skipped.map(p =>
                 `<div style="background:#fee2e2;border-radius:6px;padding:6px 10px;margin-bottom:5px;font-size:12px;">🚫 لوحة: <strong>${p}</strong> — غير مسجلة في النظام</div>`
             ).join('');
         } else {
-            skippedCard.classList.add('hidden');
+            skippedCard.style.display = 'none';
         }
-
-        // تفريغ الملف
         document.getElementById('csvFileInput').value = '';
     }
 
     // تحميل البيانات عند فتح الصفحة لأول مرة
     loadData();
+    loadEmailSettingsUI();
 </script>
 </body>
 </html>
